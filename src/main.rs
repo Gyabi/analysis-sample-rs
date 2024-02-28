@@ -7,6 +7,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use env_logger;
 use log::{error, info};
 use std::env;
+use csv::WriterBuilder;
 
 fn main() {
     // ログ設定
@@ -25,7 +26,6 @@ fn main() {
         Err(err) => {
             error!("error: {}", err);
         }
-        
     };
 }
 
@@ -45,6 +45,12 @@ fn convert(input_file: &str, output_file: &str) -> Result<(), Box<dyn Error>> {
     let file = File::open(input_file)?;
     let reader = io::BufReader::new(file);
 
+    // 出力用のファイルを開く
+    let mut writer = WriterBuilder::new()
+        .from_path(output_file)?;
+    // ヘッダーの書き込み
+    writer.write_record(&["column1", "column2", "column3"])?;
+
     for (index, line) in reader.lines().enumerate() {
         let line = line?;
 
@@ -55,6 +61,11 @@ fn convert(input_file: &str, output_file: &str) -> Result<(), Box<dyn Error>> {
         pb.inc(1);
     }
 
+    // csvに適当な文字列を詰めて出力
+    writer.write_record(&["a", "b", "c"])?;
+    writer.flush()?;
+
+    // プログレスバーを終了
     pb.finish_with_message("complete");
     Ok(())
 }
